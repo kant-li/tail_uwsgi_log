@@ -65,9 +65,8 @@ class Logreader:
 
     def get_log_info(self):
         """获取日志信息"""
-        lines = self.filereader.read()
-        # while True:
-        for i in range(10):
+        lines = self.filereader.tail()
+        while True:
             try:
                 line = next(lines)
             except StopIteration:
@@ -84,15 +83,12 @@ class Logreader:
             return result
 
 
-if __name__ == '__main__':
-    print('start' + ('*~' * 25))
-
-    pattern = r'''\]\ (?P<ip>.*?)\ (.*)\ {.*?}\ \[(?P<datetime>.*?)\]\ (?P<request_method>POST|GET|DELETE|PUT|PATCH)\s
-        (?P<request_uri>[^ ]*?)\ =>\ generated\ (?:.*?)\ in\ (?P<resp_msecs>\d+)\ msecs\s
-        \(HTTP/[\d.]+\ (?P<resp_status>\d+)\)'''
-
-    reader = Filereader(filename='uwsgi-0.log')
-    logreader = Logreader(reader, pattern)
-    logreader.get_log_info()
-
-    print('end' + ('*~' * 25))
+# if __name__ == '__main__':
+#     print('start' + ('*~' * 25))
+#
+#     from config import files
+#     # reader = Filereader(filename='uwsgi-0.log')
+#     # logreader = Logreader(reader, pattern)
+#     # logreader.get_log_info()
+#
+#     print('end' + ('*~' * 25))
