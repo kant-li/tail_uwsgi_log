@@ -10,22 +10,50 @@
 (HTTP/1.1 200) 7 headers in 403 bytes (2 switches on core 1)
 """
 
+import os
 import re
+import time
 
 
 class Filereader:
     """读取文件"""
-    def __init__(self, filename):
+    def __init__(self, filename, tail_wait=1):
+        """初始化日志阅读器，并检验是否为正确的日志文件
+        :param filename: string 文件地址
+        :param tail_wait: int default=1 跟踪文件变化的间隔时间
+        """
         self.filename = filename
+        self.tail_wait = tail_wait
+
+        self._validate_filename()
 
     def read(self):
         """读取文件，逐行返回"""
-        try:
-            with open(self.filename, 'r') as f:
-                for line in f:
+        with open(self.filename) as f:
+            for line in f:
+                yield line
+
+    def tail(self):
+        """实现tail命令，跟踪文件动态"""
+        with open(self.filename) as f:
+            f.seek(0, 2)
+            while True:
+                current_position = f.tell()
+                line = f.readline()
+                if not line:
+                    f.seek(current_position)
+                    time.sleep(self.tail_wait)
+                else:
                     yield line
-        except FileNotFoundError:
-            raise
+
+    def _validate_filename(self):
+        """确认文件存在、可读、并且不是文件夹"""
+        if not os.access(self.filename, os.F_OK):
+            raise FileNotFoundError('日志文件 ' + self.filename + ' 不存在')
+        if not os.access(self.filename, os.R_OK):
+            raise FileNotFoundError('日志文件 ' + self.filename + ' 不可读')
+        if os.path.isdir(self.filename):
+            raise FileNotFoundError(self.filename + ' 是文件夹而非日志文件')
 
 
 class Logreader:
