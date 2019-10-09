@@ -72,7 +72,11 @@ class Logreader:
             except StopIteration:
                 break
             else:
-                print(self.re_log(line=line))
+                result = self.re_log(line=line)
+                if result is None:  # 无法解析，说明不是正常日志
+                    pass
+                elif result.get('resp_status', '') in []:  # 状态错误
+                    pass
 
     def re_log(self, line):
         """用正则表达式解析log，如果满足表达式，返回解析结果，否则返回None"""

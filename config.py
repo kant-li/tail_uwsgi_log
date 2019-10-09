@@ -20,6 +20,7 @@ class Logconfig:
 
     def __init__(self, filepath, pattern='', email_recipients=None):
         self.filepath = filepath
+
         if '' != pattern:
             self.pattern = pattern
         if email_recipients is not None and len(email_recipients) > 0:
