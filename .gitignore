@@ -1,9 +1,11 @@
+# My edition
+.idea/
+credentials.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-.idea/
-*.credentials.py
 
 # C extensions
 *.so
