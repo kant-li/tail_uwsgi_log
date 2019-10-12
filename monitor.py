@@ -15,7 +15,7 @@ async def monitor():
     tasks = []
     for file in files:
         logreader = Logreader(re_pattern=file.pattern)
-        mailsender = Mailsender(sender='', password='', receivers=file.email_recipients)
+        mailsender = Mailsender(emailconfig=file.emailconfig)
         filereader = Filereader(filename=file.filepath, logreader=logreader, mailsender=mailsender)
         tasks.append(filereader.tail())
     # 执行任务

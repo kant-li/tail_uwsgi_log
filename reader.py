@@ -51,7 +51,7 @@ class Filereader:
         :param line: string logline
         """
         result = self.logreader.get_log_info(line)
-        # 未匹配，非正常日志信息，记录
+        # 未匹配到结果，非正常日志信息，记录
         if result is None:
             self.error_log.append(line)
         # 如果出现状态码500，表示错误返回，此时连同之前记录的错误信息，一同通知收件人
@@ -92,18 +92,16 @@ class Logreader:
 
 class Mailsender:
     """邮件处理类"""
-    def __init__(self, sender, password, receivers):
+    def __init__(self, emailconfig):
         """初始化邮件类
-        :param sender: string email address to login
-        :param password: string password for login
-        :param receivers: list email receivers
+        :param emailconfig: Emailconfig
         """
-        self.yagmail = yagmail.SMTP(sender, password)
-        self.receivers = receivers
+        self.yagmail = yagmail.SMTP(emailconfig.sender, emailconfig.password)
+        self.recipients = emailconfig.recipients
 
     def send_email(self, subject, contents):
         """发送邮件
         :param subject: string email subject
         :param contents: string message to send
         """
-        self.yagmail.send(to=self.receivers, subject=subject, contents=contents)
+        self.yagmail.send(to=self.recipients, subject=subject, contents=contents)
