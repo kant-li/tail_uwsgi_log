@@ -1,14 +1,13 @@
 #! /usr/bin/python
 # -*- coding:utf8 -*-
 
-from credentials import mail_addr, password
+from credentials import MAIL_ADDRESS, PASSWORD
 
 
 class Emailconfig:
     """邮件发送配置类"""
-    mail_host = 'smpt.qq.com'
-    mail_addr = mail_addr
-    password = password
+    mail_addr = MAIL_ADDRESS
+    password = PASSWORD
 
 
 class Logconfig:

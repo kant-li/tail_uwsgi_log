@@ -12,28 +12,28 @@
 
 import os
 import re
-import time
+import asyncio
+
+import yagmail
 
 
 class Filereader:
     """读取文件"""
-    def __init__(self, filename, tail_wait=1):
+    def __init__(self, filename, logreader, mailsender, tail_wait=1):
         """初始化日志阅读器，并检验是否为正确的日志文件
         :param filename: string 文件地址
+        :param logreader: Logreader object 日志解析类
         :param tail_wait: int default=1 跟踪文件变化的间隔时间
         """
         self.filename = filename
+        self.logreader = logreader
+        self.mailsender = mailsender
         self.tail_wait = tail_wait
+        self.error_log = []
 
         self._validate_filename()
 
-    def read(self):
-        """读取文件，逐行返回"""
-        with open(self.filename) as f:
-            for line in f:
-                yield line
-
-    def tail(self):
+    async def tail(self):
         """实现tail命令，跟踪文件动态"""
         with open(self.filename) as f:
             f.seek(0, 2)
@@ -42,9 +42,28 @@ class Filereader:
                 line = f.readline()
                 if not line:
                     f.seek(current_position)
-                    time.sleep(self.tail_wait)
+                    await asyncio.sleep(self.tail_wait)
                 else:
-                    yield line
+                    await self.read_log(line)
+
+    async def read_log(self, line):
+        """读取日志，根据情况进行处理
+        :param line: string logline
+        """
+        result = self.logreader.get_log_info(line)
+        # 未匹配，非正常日志信息，记录
+        if result is None:
+            self.error_log.append(line)
+        # 如果出现状态码500，表示错误返回，此时连同之前记录的错误信息，一同通知收件人
+        elif result.get('resp_status', '') == '500':
+            # 通知收件人
+            self._send_email()
+            # 清空错误日志记录
+            self.error_log = []
+
+    def _send_email(self):
+        """发送邮件通知收件人"""
+        self.mailsender.send_email(subject='异常日志通知', contents='\n'.join(self.error_log))
 
     def _validate_filename(self):
         """确认文件存在、可读、并且不是文件夹"""
@@ -59,26 +78,10 @@ class Filereader:
 class Logreader:
     """分析日志"""
 
-    def __init__(self, filereader, re_pattern=r''):
-        self.filereader = filereader
+    def __init__(self, re_pattern=r''):
         self.pattern = re.compile(re_pattern, re.VERBOSE)
 
-    def get_log_info(self):
-        """获取日志信息"""
-        lines = self.filereader.tail()
-        while True:
-            try:
-                line = next(lines)
-            except StopIteration:
-                break
-            else:
-                result = self.re_log(line=line)
-                if result is None:  # 无法解析，说明不是正常日志
-                    pass
-                elif result.get('resp_status', '') in []:  # 状态错误
-                    pass
-
-    def re_log(self, line):
+    def get_log_info(self, line):
         """用正则表达式解析log，如果满足表达式，返回解析结果，否则返回None"""
         result = self.pattern.search(line)
         if result:
@@ -87,12 +90,20 @@ class Logreader:
             return result
 
 
-# if __name__ == '__main__':
-#     print('start' + ('*~' * 25))
-#
-#     from config import files
-#     # reader = Filereader(filename='uwsgi-0.log')
-#     # logreader = Logreader(reader, pattern)
-#     # logreader.get_log_info()
-#
-#     print('end' + ('*~' * 25))
+class Mailsender:
+    """邮件处理类"""
+    def __init__(self, sender, password, receivers):
+        """初始化邮件类
+        :param sender: string email address to login
+        :param password: string password for login
+        :param receivers: list email receivers
+        """
+        self.yagmail = yagmail.SMTP(sender, password)
+        self.receivers = receivers
+
+    def send_email(self, subject, contents):
+        """发送邮件
+        :param subject: string email subject
+        :param contents: string message to send
+        """
+        self.yagmail.send(to=self.receivers, subject=subject, contents=contents)
