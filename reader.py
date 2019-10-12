@@ -19,16 +19,16 @@ import yagmail
 
 class Filereader:
     """读取文件"""
-    def __init__(self, filename, logreader, mailsender, tail_wait=1):
+    def __init__(self, filename, logreader, mailsender, wait_time=1.0):
         """初始化日志阅读器，并检验是否为正确的日志文件
         :param filename: string 文件地址
         :param logreader: Logreader object 日志解析类
-        :param tail_wait: int default=1 跟踪文件变化的间隔时间
+        :param wait_time: int default=1 跟踪文件变化的间隔时间
         """
         self.filename = filename
         self.logreader = logreader
         self.mailsender = mailsender
-        self.tail_wait = tail_wait
+        self.wait_time = wait_time
         self.error_log = []
 
         self._validate_filename()
@@ -37,13 +37,15 @@ class Filereader:
         """实现tail命令，跟踪文件动态"""
         with open(self.filename) as f:
             f.seek(0, 2)
+            i = 0
             while True:
                 current_position = f.tell()
                 line = f.readline()
                 if not line:
                     f.seek(current_position)
-                    await asyncio.sleep(self.tail_wait)
+                    await asyncio.sleep(self.wait_time)
                 else:
+                    i += 1
                     await self.read_log(line)
 
     async def read_log(self, line):
@@ -57,13 +59,14 @@ class Filereader:
         # 如果出现状态码500，表示错误返回，此时连同之前记录的错误信息，一同通知收件人
         elif result.get('resp_status', '') == '500':
             # 通知收件人
+            self.error_log.append(line)
             self._send_email()
             # 清空错误日志记录
             self.error_log = []
 
     def _send_email(self):
         """发送邮件通知收件人"""
-        self.mailsender.send_email(subject='异常日志通知', contents='\n'.join(self.error_log))
+        self.mailsender.send_email(subject='异常日志通知', contents=''.join(self.error_log))
 
     def _validate_filename(self):
         """确认文件存在、可读、并且不是文件夹"""
@@ -96,7 +99,8 @@ class Mailsender:
         """初始化邮件类
         :param emailconfig: Emailconfig
         """
-        self.yagmail = yagmail.SMTP(emailconfig.sender, emailconfig.password)
+        self.yagmail = yagmail.SMTP(emailconfig.sender, emailconfig.password,
+                                    host=emailconfig.host, port=emailconfig.port)
         self.recipients = emailconfig.recipients
 
     def send_email(self, subject, contents):

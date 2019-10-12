@@ -16,7 +16,8 @@ async def monitor():
     for file in files:
         logreader = Logreader(re_pattern=file.pattern)
         mailsender = Mailsender(emailconfig=file.emailconfig)
-        filereader = Filereader(filename=file.filepath, logreader=logreader, mailsender=mailsender)
+        filereader = Filereader(filename=file.filepath, logreader=logreader, mailsender=mailsender,
+                                wait_time=file.wait_time)
         tasks.append(filereader.tail())
     # 执行任务
     await asyncio.gather(*tasks)
