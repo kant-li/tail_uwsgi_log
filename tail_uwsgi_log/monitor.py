@@ -22,9 +22,12 @@ async def monitor(configs):
                                   host=config.get('mail_host', ''),
                                   port=config.get('mail_port', ''),)
         mailsender = Mailsender(emailconfig=emailconfig)
-        logreader = Logreader(re_pattern=config.get('pattern', ''))
-        filereader = Filereader(filename=config.get('filepath', ''), logreader=logreader, mailsender=mailsender,
-                                wait_time=config.get('wait_time', 1.0))
+        logconfig = Logconfig(filepath=config.get('filepath', ''), pattern=config.get('pattern', ''),
+                              wait_time=config.get('wait_time', 1.0))
+
+        logreader = Logreader(re_pattern=logconfig.pattern)
+        filereader = Filereader(filename=logconfig.filepath, logreader=logreader, mailsender=mailsender,
+                                wait_time=logconfig.wait_time)
         tasks.append(filereader.tail())
 
     # 执行任务
@@ -36,10 +39,11 @@ def tail_uwsgi_log():
     parser = argparse.ArgumentParser(prog='tail_uwsgi_log', description='Tail uwsgi logs')
     parser.add_argument('-c', '--config', type=str, help='Config file path')
 
+    # parse configs
     configs = parse_config(parser.parse_args().config)
 
-    for config in configs:
-        print(config)
+    # start tailing tasks
+    asyncio.run(monitor(configs))
 
 
 def parse_config(filepath):
@@ -73,7 +77,7 @@ def parse_mail_config(conf, section):
     if conf.has_section('mail'):
         for k in mail_info.keys():
             if conf.has_option('mail', k):
-                mail_info[k] = conf.get('mail', 'mail_host')
+                mail_info[k] = conf.get('mail', k)
 
     for k in mail_info.keys():
         if conf.has_option(section, k):
@@ -84,6 +88,6 @@ def parse_mail_config(conf, section):
         mail_info['mail_port'] = int(mail_info['mail_port'])
     except ValueError:
         mail_info['mail_port'] = 465
-    mail_info['mail_recipients'] = [i.strip() for i in mail_info['mail_recipients'].split(',')]
+    mail_info['mail_recipients'] = [i.strip() for i in mail_info.get('mail_recipients', '').split(',')]
 
     return mail_info
