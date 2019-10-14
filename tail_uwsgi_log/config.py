@@ -1,8 +1,6 @@
 #! /usr/bin/python
 # -*- coding:utf8 -*-
 
-from tail_uwsgi_log.credentials import MAIL_ADDRESS, PASSWORD
-
 
 class Emailconfig:
     """邮件发送配置类"""
@@ -13,8 +11,8 @@ class Emailconfig:
         :param password: string 登录密码
         """
         self.recipients = recipients
-        self.sender = MAIL_ADDRESS if sender == '' else sender
-        self.password = PASSWORD if password == '' else password
+        self.sender = sender
+        self.password = password
         self.host = host
         self.port = port
 
@@ -25,19 +23,9 @@ class Logconfig:
             (?P<request_uri>[^ ]*?)\ =>\ generated\ (?:.*?)\ in\ (?P<resp_msecs>\d+)\ msecs\s
             \(HTTP/[\d.]+\ (?P<resp_status>\d+)\)'''
 
-    def __init__(self, filepath, emailconfig, pattern='', wait_time=1.0):
+    def __init__(self, filepath, pattern='', wait_time=1.0):
         self.filepath = filepath
-        self.emailconfig = emailconfig
         self.wait_time = wait_time
 
-        if '' != pattern:
+        if pattern is not None and '' != pattern:
             self.pattern = pattern
-
-
-my_emailconfig = Emailconfig(recipients=['kant@kantli.com'], host='smtp.qq.com')
-
-
-files = [
-    Logconfig(filepath='/users/kant/desktop/uwsgi-t1.log', emailconfig=my_emailconfig, wait_time=0.5),
-    Logconfig(filepath='/users/kant/desktop/uwsgi-t2.log', emailconfig=my_emailconfig),
-]

@@ -15,12 +15,18 @@ async def monitor(configs):
     """监控日志文件"""
     # 每个文件都创建对应任务
     tasks = []
-    for file in configs:
-        logreader = Logreader(re_pattern=file.pattern)
-        mailsender = Mailsender(emailconfig=file.emailconfig)
-        filereader = Filereader(filename=file.filepath, logreader=logreader, mailsender=mailsender,
-                                wait_time=file.wait_time)
+    for config in configs:
+        emailconfig = Emailconfig(recipients=config.get('mail_recipients', []),
+                                  sender=config.get('mail_sender', ''),
+                                  password=config.get('mail_password', ''),
+                                  host=config.get('mail_host', ''),
+                                  port=config.get('mail_port', ''),)
+        mailsender = Mailsender(emailconfig=emailconfig)
+        logreader = Logreader(re_pattern=config.get('pattern', ''))
+        filereader = Filereader(filename=config.get('filepath', ''), logreader=logreader, mailsender=mailsender,
+                                wait_time=config.get('wait_time', 1.0))
         tasks.append(filereader.tail())
+
     # 执行任务
     await asyncio.gather(*tasks)
 
@@ -34,7 +40,6 @@ def tail_uwsgi_log():
 
     for config in configs:
         print(config)
-        pass
 
 
 def parse_config(filepath):
@@ -74,13 +79,11 @@ def parse_mail_config(conf, section):
         if conf.has_option(section, k):
             mail_info[k] = conf.get(section, k)
 
+    # 整理数据格式
     try:
         mail_info['mail_port'] = int(mail_info['mail_port'])
     except ValueError:
         mail_info['mail_port'] = 465
+    mail_info['mail_recipients'] = [i.strip() for i in mail_info['mail_recipients'].split(',')]
 
     return mail_info
-
-
-if __name__ == '__main__':
-    asyncio.run(monitor())
