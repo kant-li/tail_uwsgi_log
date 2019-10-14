@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='tail_uwsgi_log',
-    version='0.0.1a',
+    version='0.0.1b',
     packages=find_packages(),
 
     install_requires=['yagmail>=0.11.220'],
@@ -17,7 +17,7 @@ setup(
 
     entry_points={
         "console_scripts": [
-            "test_uwsgi_log = tail_uwsgi_log.monitor:test_uwsgi_log"
+            "tail_uwsgi_log = tail_uwsgi_log.monitor:tail_uwsgi_log",
         ]
     },
 )
