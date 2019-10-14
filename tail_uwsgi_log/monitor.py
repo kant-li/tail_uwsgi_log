@@ -5,8 +5,8 @@
 
 import asyncio
 
-from reader import Filereader, Logreader, Mailsender
-from config import files
+from tail_uwsgi_log.reader import Filereader, Logreader, Mailsender
+from tail_uwsgi_log.config import files
 
 
 async def monitor():
@@ -21,6 +21,11 @@ async def monitor():
         tasks.append(filereader.tail())
     # 执行任务
     await asyncio.gather(*tasks)
+
+
+def test_uwsgi_log():
+    """test"""
+    print('test ok')
 
 
 if __name__ == '__main__':

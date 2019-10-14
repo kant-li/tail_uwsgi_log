@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # -*- coding:utf8 -*-
 
-from credentials import MAIL_ADDRESS, PASSWORD
+from tail_uwsgi_log.credentials import MAIL_ADDRESS, PASSWORD
 
 
 class Emailconfig:
