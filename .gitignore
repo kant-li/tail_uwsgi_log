@@ -1,5 +1,6 @@
 # My edition
 .idea/
+.vscode/
 credentials.py
 
 # Byte-compiled / optimized / DLL files

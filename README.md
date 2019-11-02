@@ -42,7 +42,7 @@ mail_password = your_password
 
 To tail several log files at the same time, we could set several sections on config files, the section name should start with 'log'.
 
-For mail settings, we could use a section named 'mail' to set default value. The default value will be used if there is no keyword in log section.
+For mail settings, we could use a section named 'mail' to set default value. The default value will be used if not set in log section.
 
 For example:
 ```ini

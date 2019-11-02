@@ -19,8 +19,8 @@ class Emailconfig:
 
 class Logconfig:
     """日志文件解析配置类，如文件地址、解析方式、错误通知人等"""
-    pattern = r'''\]\ (?P<ip>.*?)\ (.*)\ {.*?}\ \[(?P<datetime>.*?)\]\ (?P<request_method>POST|GET|DELETE|PUT|PATCH)\s
-            (?P<request_uri>[^ ]*?)\ =>\ generated\ (?:.*?)\ in\ (?P<resp_msecs>\d+)\ msecs\s
+    pattern = r'''\]\ (?P<ip>.*?)\ (.*)\ {.*?}\ \[(?P<datetime>.*?)\]\ (?P<request_method>POST|GET|DELETE|PUT|PATCH|OPTIONS)\s
+            (?P<request_uri>[^ ]*?)\ =>\ generated\ (?:.*?)\ in\ (?P<resp_msecs>\d+)\ msecs .*\s
             \(HTTP/[\d.]+\ (?P<resp_status>\d+)\)'''
 
     def __init__(self, filepath, pattern='', wait_time=1.0):
